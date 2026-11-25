@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Apoio à Decisão — Cenário B (AHP &amp; Simplex)</title>
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & RESET MODERNO (100% INLINE — COMPATÍVEL COM GOOGLE SITES)
+       Paleta executiva azul-marinho e azul institucional com alto contraste
+       ========================================================================== */
+    :root {
+      --bg-page: #f3f6fb;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-header: #0f2942;
+      --bg-header-accent: #163a5f;
+
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-soft: #eff6ff;
+      --primary-border: #bfdbfe;
+
+      --navy: #0f2942;
+      --text-main: #1e293b;
+      --text-muted: #52637a;
+      --text-light: #94a3b8;
+
+      --border: #dbe3ee;
+      --border-strong: #cbd5e1;
+
+      --success: #047857;
+      --success-bg: #ecfdf5;
+      --success-border: #a7f3d0;
+      --pivot-bg: #bbf7d0;
+      --pivot-border: #059669;
+
+      --warn: #b45309;
+      --warn-bg: #fffbeb;
+      --warn-border: #fde68a;
+      --pivot-line: #fef3c7;
+
+      --danger: #b91c1c;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(15, 41, 66, 0.06), 0 1px 2px rgba(15, 41, 66, 0.04);
+      --shadow-md: 0 4px 14px rgba(15, 41, 66, 0.08);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Container principal compacto para visualização em iframe do Google Sites */
+    .app-shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+
+    /* ==========================================================================
+       CABEÇALHO E NAVEGAÇÃO POR ABAS
+       ========================================================================== */
+    .topbar {
+      background: linear-gradient(135deg, var(--bg-header) 0%, var(--bg-header-accent) 100%);
+      color: #ffffff;
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 16px;
+    }
+
+    .topbar-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #93c5fd;
+    }
+
+    .brand-eyebrow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #bfdbfe;
+      font-weight: 600;
+    }
+
+    .pill-scenario {
+      background: rgba(59, 130, 246, 0.28);
+      border: 1px solid rgba(147, 197, 253, 0.4);
+      padding: 2px 8px;
+      border-radius: 999px;
+      color: #ffffff;
+    }
+
+    .brand-title {
+      margin: 3px 0 0;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+
+    .topbar-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      padding: 9px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.18s ease;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--navy);
+      border-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    }
+
+    .btn-reset {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: rgba(15, 23, 42, 0.28);
+      color: #f8fafc;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+
+    .btn-reset:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* ==========================================================================
+       CARDS, SEÇÕES E GRIDS
+       ========================================================================== */
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #fbfdff;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-subtitle {
+      margin: 2px 0 0;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .card-body {
+      padding: 16px 18px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+
+    .col-7 { grid-column: span 7; }
+    .col-5 { grid-column: span 5; }
+    .col-4 { grid-column: span 4; }
+    .col-8 { grid-column: span 8; }
+    .col-12 { grid-column: span 12; }
+
+    @media (max-width: 960px) {
+      .col-7, .col-5, .col-4, .col-8 {
+        grid-column: span 12;
+      }
+    }
+
+    /* ==========================================================================
+       BADGES, TAGS E INDICADORES
+       ========================================================================== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-cost {
+      background: var(--warn-bg);
+      color: var(--warn);
+      border: 1px solid var(--warn-border);
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+
+    .badge-benefit {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+
+    .badge-ok {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    .badge-err {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+
+    .badge-info {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+    }
+
+    .badge-warn {
+      background: var(--warn-bg);
+      color: var(--warn);
+      border: 1px solid var(--warn-border);
+    }
+
+    /* ==========================================================================
+       TABELAS E INPUTS
+       ========================================================================== */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #edf2f7;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    thead th {
+      background: #f1f5fa;
+      color: var(--navy);
+      font-weight: 700;
+      font-size: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    tbody tr:hover {
+      background: #f8fbff;
+    }
+
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .center {
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .th-crit {
+      min-width: 138px;
+    }
+
+    .th-crit-title {
+      display: block;
+      margin-bottom: 4px;
+      line-height: 1.25;
+    }
+
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-main);
+      background: #fbfdff;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    input[type="number"]:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+    }
+
+    .input-provider {
+      font-weight: 700;
+      color: var(--navy);
+      min-width: 135px;
+      border-color: transparent !important;
+      background: transparent !important;
+    }
+
+    .input-provider:hover {
+      border-color: var(--border-strong) !important;
+      background: #ffffff !important;
+    }
+
+    .input-provider:focus {
+      border-color: var(--primary) !important;
+      background: #ffffff !important;
+    }
+
+    /* ==========================================================================
+       SLIDERS DE SAATY (ETAPA 1)
+       ========================================================================== */
+    .sliders-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 680px) {
+      .sliders-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .slider-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .slider-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 11.5px;
+      margin-bottom: 6px;
+    }
+
+    .slider-label-left {
+      font-weight: 700;
+      color: var(--navy);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .slider-label-right {
+      font-weight: 600;
+      color: var(--text-muted);
+      flex: 1;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .slider-val-pill {
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slider-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #cbd5e1;
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(15, 41, 66, 0.35);
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(15, 41, 66, 0.35);
+      cursor: pointer;
+    }
+
+    /* Métricas de consistência AHP */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .metric-tile {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .metric-tile.tile-ok {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+    }
+
+    .metric-tile.tile-err {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .metric-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Gráfico de barras horizontal em CSS puro (Ranking AHP) */
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .bar-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+    }
+
+    .bar-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .rank-dot {
+      width: 21px;
+      height: 21px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .rank-dot.first {
+      background: #f59e0b;
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(245, 158, 11, 0.45);
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 11px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: #64748b;
+      transition: width 0.25s ease;
+    }
+
+    .bar-fill.first {
+      background: linear-gradient(90deg, #1d4ed8 0%, #0284c7 100%);
+    }
+
+    .winner-banner {
+      background: linear-gradient(135deg, #0f2942 0%, #1d4ed8 100%);
+      color: #ffffff;
+      border-radius: var(--radius-md);
+      padding: 13px 15px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 12px;
+      font-size: 12.5px;
+    }
+
+    .winner-banner strong {
+      color: #fde68a;
+    }
+
+    .row-winner {
+      background: #eff6ff !important;
+      font-weight: 700;
+    }
+
+    .matrix-diag {
+      background: #f1f5f9;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .weight-col {
+      background: #eff6ff;
+      color: var(--navy);
+      font-weight: 800;
+    }
+
+    /* ==========================================================================
+       ETAPA 2: SIMPLEX TABULAR (INPUTS, FORMA PADRÃO, TABLEAUS, PAINEL)
+       ========================================================================== */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+
+    .formula-box {
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      color: var(--navy);
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    .constraint-row {
+      display: grid;
+      grid-template-columns: 2.2fr 1fr 1fr 24px 1.2fr;
+      gap: 8px;
+      align-items: end;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 720px) {
+      .constraint-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .constraint-name-col {
+        grid-column: span 2;
+      }
+      .constraint-op {
+        display: none;
+      }
+    }
+
+    .constraint-op {
+      text-align: center;
+      font-weight: 800;
+      color: var(--navy);
+      padding-bottom: 7px;
+    }
+
+    .mini-label {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    /* Painel Executivo Simplex */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 680px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kpi-card {
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      color: #ffffff;
+      background: var(--navy);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kpi-card.kpi-z {
+      background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    }
+
+    .kpi-card.kpi-blue {
+      background: linear-gradient(135deg, #0f2942 0%, #1e40af 100%);
+    }
+
+    .kpi-label {
+      font-size: 11.5px;
+      color: rgba(255, 255, 255, 0.82);
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 800;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-unit {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.85;
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 720px) {
+      .resource-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .resource-card {
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: var(--bg-subtle);
+    }
+
+    .resource-card.bottleneck {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+    }
+
+    .resource-card.idle {
+      background: var(--primary-soft);
+      border-color: var(--primary-border);
+    }
+
+    .res-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .res-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--navy);
+    }
+
+    .res-bar-track {
+      width: 100%;
+      height: 7px;
+      background: rgba(15, 41, 66, 0.12);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 7px 0;
+    }
+
+    .res-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .res-meta {
+      font-size: 12px;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* Tableaus Simplex e Destaques de Pivoteamento */
+    .tableau-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .tableau-head {
+      padding: 12px 16px;
+      background: #f8fafd;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .tableau-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .iter-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--navy);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tableau-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .pivot-col-hdr {
+      background: var(--pivot-line) !important;
+      color: #78350f !important;
+      border-left: 1px solid #f59e0b;
+      border-right: 1px solid #f59e0b;
+    }
+
+    .pivot-col-cell {
+      background: #fffbeb !important;
+    }
+
+    .pivot-row-tr td {
+      background: #fffbeb;
+    }
+
+    .pivot-element-cell {
+      background: var(--pivot-bg) !important;
+      color: #064e3b !important;
+      font-weight: 800 !important;
+      box-shadow: inset 0 0 0 2px var(--pivot-border);
+    }
+
+    .ratio-min-cell {
+      background: var(--success-bg) !important;
+      color: var(--success) !important;
+      font-weight: 800;
+    }
+
+    .row-zj td {
+      background: #f1f5f9 !important;
+      border-top: 2px solid var(--border-strong);
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .row-cjzj td {
+      background: #eff6ff !important;
+      border-top: 1px solid var(--primary-border);
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .entering-cjzj {
+      background: var(--primary) !important;
+      color: #ffffff !important;
+    }
+
+    .cjzj-pos {
+      color: var(--success) !important;
+    }
+
+    .tableau-note {
+      padding: 9px 16px;
+      background: #fbfdff;
+      border-top: 1px solid #edf2f7;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .legend-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 11.5px;
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    /* Toast discreto (sem alert/confirm) */
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      background: var(--navy);
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(15, 41, 66, 0.25);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all 0.22s ease;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      padding: 14px 8px 6px;
+    }
+
+    .formula-hint {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ========================================================================
+         CABEÇALHO SUPERIOR E NAVEGAÇÃO
+         ======================================================================== -->
+    <header class="topbar">
+      <div class="topbar-top">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <!-- Ícone Cloud em SVG inline -->
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-eyebrow">
+              <span class="pill-scenario">Cenário B • Cloud IaaS / Containers</span>
+              <span>Pesquisa Operacional • ADS</span>
+            </div>
+            <h1 class="brand-title">Sistema de Apoio à Decisão: AHP (Saaty) &amp; Simplex Tabular</h1>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-controls">
+        <nav class="tabs" role="tablist" aria-label="Etapas do Projeto">
+          <button type="button" class="tab-btn active" id="tabBtnAhp" role="tab" aria-selected="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+              <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+              <line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/>
+            </svg>
+            Etapa 1: Multicritério (AHP &amp; Min-Max)
+          </button>
+          <button type="button" class="tab-btn" id="tabBtnSimplex" role="tab" aria-selected="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="2" width="16" height="20" rx="2"/>
+              <line x1="8" y1="6" x2="16" y2="6"/>
+              <line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/>
+              <line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/>
+              <line x1="8" y1="18" x2="16" y2="18"/>
+            </svg>
+            Etapa 2: Programação Linear (Simplex)
+          </button>
+        </nav>
+
+        <button type="button" class="btn-reset" id="btnResetAll" title="Voltar aos dados de teste originais">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          Restaurar Dados de Teste
+        </button>
+      </div>
+    </header>
+
+    <!-- ========================================================================
+         ABA 1: ETAPA 1 — MULTICRITÉRIO (AHP DE SAATY + NORMALIZAÇÃO MIN-MAX)
+         ======================================================================== -->
+    <main id="panelAhp" class="tab-panel active" role="tabpanel">
+      <!-- 1. Tabela de Dados Brutos Editável -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">1. Matriz de Dados Brutos — Provedores de Nuvem (Editável)</h2>
+            <p class="card-subtitle">Altere os valores abaixo para recalcular instantaneamente a normalização, os pesos e o ranking.</p>
+          </div>
+          <span class="badge badge-info">6 Alternativas × 5 Critérios</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-wrap">
+            <table id="rawTable">
+              <thead>
+                <tr>
+                  <th style="min-width: 155px;">Provedor Cloud</th>
+                  <th class="th-crit">
+                    <span class="th-crit-title">Custo Mensal/Instância (R$)</span>
+                    <span class="badge-cost">CUSTO ↓ menor é melhor</span>
+                  </th>
+                  <th class="th-crit">
+                    <span class="th-crit-title">Latência Média (ms)</span>
+                    <span class="badge-cost">CUSTO ↓ menor é melhor</span>
+                  </th>
+                  <th class="th-crit">
+                    <span class="th-crit-title">SLA Disponibilidade (%)</span>
+                    <span class="badge-benefit">BENEFÍCIO ↑ maior é melhor</span>
+                  </th>
+                  <th class="th-crit">
+                    <span class="th-crit-title">Storage IOPS</span>
+                    <span class="badge-benefit">BENEFÍCIO ↑ maior é melhor</span>
+                  </th>
+                  <th class="th-crit">
+                    <span class="th-crit-title">Suporte Técnico (1 a 10)</span>
+                    <span class="badge-benefit">BENEFÍCIO ↑ maior é melhor</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="rawTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Matriz de Saaty (5x5) + Sliders e Ranking Final -->
+      <div class="grid-2">
+        <!-- Coluna Esquerda: Saaty 5x5 + Sliders + Consistência -->
+        <section class="card col-7">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">2. Matriz de Comparação Par a Par de Saaty (5×5)</h2>
+              <p class="card-subtitle">Use os 10 sliders (escala 1/9 a 9) para ponderar os critérios. Os recíprocos atualizam automaticamente.</p>
+            </div>
+            <span id="ahpConsistencyBadge" class="badge badge-ok">Consistente (RC &lt; 0,10)</span>
+          </div>
+          <div class="card-body">
+            <!-- 10 Sliders do Triângulo Superior -->
+            <div id="saatySlidersContainer" class="sliders-grid"></div>
+
+            <!-- Matriz 5x5 + Pesos W -->
+            <div class="table-wrap" style="border: 1px solid var(--border); border-radius: var(--radius-md);">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Critério</th>
+                    <th class="center">C1</th>
+                    <th class="center">C2</th>
+                    <th class="center">C3</th>
+                    <th class="center">C4</th>
+                    <th class="center">C5</th>
+                    <th class="num weight-col">Peso (W)</th>
+                    <th class="num weight-col">%</th>
+                  </tr>
+                </thead>
+                <tbody id="saatyMatrixBody"></tbody>
+              </table>
+            </div>
+
+            <!-- Indicadores λmax, IC, RI, RC -->
+            <div class="metrics-row" id="ahpMetricsRow"></div>
+          </div>
+        </section>
+
+        <!-- Coluna Direita: Ranking Final + Gráfico de Barras -->
+        <section class="card col-5">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">3. Ranking Final Ponderado</h2>
+              <p class="card-subtitle">Pontuação Global = Σ (W<sub>j</sub> × N<sub>ij</sub>), ordenado do 1º ao 6º lugar.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Gráfico de barras horizontal em CSS puro -->
+            <div id="rankingChart" class="bar-chart"></div>
+
+            <!-- Tabela Classificada -->
+            <div class="table-wrap" style="border: 1px solid var(--border); border-radius: var(--radius-md);">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="center" style="width: 52px;">Pos.</th>
+                    <th>Provedor</th>
+                    <th class="num">Pontuação</th>
+                    <th class="num">Índice (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="rankingTableBody"></tbody>
+              </table>
+            </div>
+
+            <!-- Destaque do 1º colocado -->
+            <div id="winnerBanner" class="winner-banner"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 3. Tabela Normalizada Linear Min-Max [0, 1] -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">4. Tabela Normalizada Linear Min-Max (Escala [0, 1])</h2>
+            <p class="card-subtitle">Padronização matemática eliminando diferenças de unidades físicas (R$, ms, %, IOPS, nota).</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="formula-hint">
+            <strong>Fórmulas aplicadas:</strong>
+            Benefício: <code>N_ij = (X_ij - X_min) / (X_max - X_min)</code> &nbsp;|&nbsp;
+            Custo: <code>N_ij = (X_max - X_ij) / (X_max - X_min)</code> &nbsp;(1,0000 = melhor desempenho relativo; se máx = mín, assume 1,0000).
+          </div>
+          <div class="table-wrap" style="border: 1px solid var(--border); border-radius: var(--radius-md);">
+            <table>
+              <thead>
+                <tr>
+                  <th>Provedor</th>
+                  <th class="num">C1: Custo Mensal</th>
+                  <th class="num">C2: Latência Média</th>
+                  <th class="num">C3: SLA (%)</th>
+                  <th class="num">C4: Storage IOPS</th>
+                  <th class="num">C5: Suporte Técnico</th>
+                </tr>
+              </thead>
+              <tbody id="normalizedTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========================================================================
+         ABA 2: ETAPA 2 — PROGRAMAÇÃO LINEAR (MÉTODO SIMPLEX TABULAR)
+         ======================================================================== -->
+    <main id="panelSimplex" class="tab-panel" role="tabpanel">
+      <!-- 1. Configuração do Modelo + Forma Padrão -->
+      <div class="grid-2">
+        <!-- Função Objetivo e Forma Padrão -->
+        <section class="card col-5">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">1. Função Objetivo (Maximização)</h2>
+              <p class="card-subtitle">Defina o retorno/throughput (RPS) por unidade de X1 e X2.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label" for="inputC1">X1 — Instâncias de Microsserviços Transacionais (Coef. c1 em RPS)</label>
+              <input type="number" id="inputC1" step="10" min="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inputC2">X2 — Nós de Processamento Analítico (Coef. c2 em RPS)</label>
+              <input type="number" id="inputC2" step="10" min="0" />
+            </div>
+
+            <div style="margin-top: 14px;">
+              <span class="form-label">Forma Padrão (com Variáveis de Folga X3, X4, X5):</span>
+              <div id="standardFormBox" class="formula-box"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Restrições Tecnológicas -->
+        <section class="card col-7">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">2. Restrições Tecnológicas e Orçamentárias (&le;)</h2>
+              <p class="card-subtitle">Edite o consumo unitário de X1 e X2 e os limites disponíveis (RHS) de cada recurso.</p>
+            </div>
+          </div>
+          <div class="card-body" id="constraintsContainer"></div>
+        </section>
+      </div>
+
+      <!-- 2. Painel Executivo (Leitura Gerencial) -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">3. Painel Executivo — Solução Ótima, Gargalos e Capacidade Ociosa</h2>
+            <p class="card-subtitle">Interpretação gerencial automática após a convergência do Método Simplex.</p>
+          </div>
+          <span id="simplexStatusBadge" class="badge badge-ok">Solução Ótima Encontrada</span>
+        </div>
+        <div class="card-body">
+          <div id="simplexKpiGrid" class="kpi-grid"></div>
+          <div id="simplexResourceGrid" class="resource-grid"></div>
+        </div>
+      </section>
+
+      <!-- 3. Histórico Completo de Quadros (Tableaus) com Gauss-Jordan -->
+      <section>
+        <div class="card" style="margin-bottom: 14px;">
+          <div class="card-header" style="border-bottom: none;">
+            <div>
+              <h2 class="card-title">4. Quadros (Tableaus) do Simplex — Pivoteamento de Gauss-Jordan Passo a Passo</h2>
+              <p class="card-subtitle">
+                Regra de entrada: maior C<sub>j</sub> &minus; Z<sub>j</sub> &gt; 0 &nbsp;|&nbsp;
+                Regra de saída: menor razão RHS / coef<sub>pivô</sub> (&gt; 0) &nbsp;|&nbsp;
+                Parada: todos C<sub>j</sub> &minus; Z<sub>j</sub> &le; 0.
+              </p>
+            </div>
+            <div class="legend-bar">
+              <span class="legend-chip" style="background: #fef3c7; color: #78350f; border: 1px solid #f59e0b;">Coluna / Linha Pivô</span>
+              <span class="legend-chip" style="background: #bbf7d0; color: #064e3b; border: 1px solid #059669;">Elemento Pivô</span>
+              <span class="legend-chip" style="background: #1d4ed8; color: #ffffff;">Variável que Entra</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="simplexTableausContainer"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      Sistema de Apoio à Decisão — Pesquisa Operacional (Cenário B: Provedores de Computação em Nuvem) • 100% Autocontido para Google Sites.
+    </footer>
+  </div>
+
+  <!-- Notificação discreta para ações (sem uso de alert/confirm) -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ========================================================================
+         1. CONFIGURAÇÃO INICIAL (DADOS REALISTAS DE TESTE — CENÁRIO B)
+         ======================================================================== */
+      const CRITERIA = [
+        { id: 'cost', short: 'Custo Mensal', name: 'Custo Mensal/Instância (R$)', type: 'COST', step: 5 },
+        { id: 'latency', short: 'Latência', name: 'Latência Média (ms)', type: 'COST', step: 0.5 },
+        { id: 'sla', short: 'SLA (%)', name: 'SLA Disponibilidade (%)', type: 'BENEFIT', step: 0.01 },
+        { id: 'iops', short: 'Storage IOPS', name: 'Storage IOPS', type: 'BENEFIT', step: 100 },
+        { id: 'support', short: 'Suporte', name: 'Suporte Técnico (1 a 10)', type: 'BENEFIT', step: 0.1 }
+      ];
+
+      // Escala discreta de Saaty (17 posições: índice 8 = valor 1)
+      const SAATY_SCALE = [
+        { label: '1/9', val: 1 / 9, text: 'Extremamente menor' },
+        { label: '1/8', val: 1 / 8, text: 'Intermediário (1/8)' },
+        { label: '1/7', val: 1 / 7, text: 'Muito fortemente menor' },
+        { label: '1/6', val: 1 / 6, text: 'Intermediário (1/6)' },
+        { label: '1/5', val: 1 / 5, text: 'Fortemente menor' },
+        { label: '1/4', val: 1 / 4, text: 'Intermediário (1/4)' },
+        { label: '1/3', val: 1 / 3, text: 'Moderadamente menor' },
+        { label: '1/2', val: 1 / 2, text: 'Intermediário (1/2)' },
+        { label: '1',   val: 1,     text: 'Importância igual' },
+        { label: '2',   val: 2,     text: 'Intermediário (2)' },
+        { label: '3',   val: 3,     text: 'Moderadamente maior' },
+        { label: '4',   val: 4,     text: 'Intermediário (4)' },
+        { label: '5',   val: 5,     text: 'Fortemente maior' },
+        { label: '6',   val: 6,     text: 'Intermediário (6)' },
+        { label: '7',   val: 7,     text: 'Muito fortemente maior' },
+        { label: '8',   val: 8,     text: 'Intermediário (8)' },
+        { label: '9',   val: 9,     text: 'Extremamente maior' }
+      ];
+
+      function getDefaultProviders() {
+        return [
+          { id: 'aws',    name: 'AWS',          values: { cost: 430, latency: 17.5, sla: 99.99, iops: 12000, support: 9.2 } },
+          { id: 'gcp',    name: 'Google Cloud', values: { cost: 395, latency: 16.0, sla: 99.95, iops: 10500, support: 8.7 } },
+          { id: 'azure',  name: 'Azure',        values: { cost: 445, latency: 20.5, sla: 99.95, iops: 9800,  support: 8.9 } },
+          { id: 'do',     name: 'DigitalOcean', values: { cost: 195, latency: 24.0, sla: 99.99, iops: 5500,  support: 7.6 } },
+          { id: 'oci',    name: 'Oracle Cloud', values: { cost: 310, latency: 19.0, sla: 99.95, iops: 11200, support: 8.1 } },
+          { id: 'linode', name: 'Linode',       values: { cost: 210, latency: 22.5, sla: 99.99, iops: 6200,  support: 7.9 } }
+        ];
+      }
+
+      // Índices na SAATY_SCALE para os 10 pares (i < j), calibrados para consistência ótima (RC ~ 0,01)
+      function getDefaultPairwiseIdx() {
+        return {
+          '0-1': 9,  // Custo vs Latência = 2
+          '0-2': 8,  // Custo vs SLA = 1
+          '0-3': 10, // Custo vs IOPS = 3
+          '0-4': 12, // Custo vs Suporte = 5
+          '1-2': 7,  // Latência vs SLA = 1/2
+          '1-3': 9,  // Latência vs IOPS = 2
+          '1-4': 10, // Latência vs Suporte = 3
+          '2-3': 10, // SLA vs IOPS = 3
+          '2-4': 11, // SLA vs Suporte = 4
+          '3-4': 9   // IOPS vs Suporte = 2
+        };
+      }
+
+      // Modelo Simplex inicial calibrado para gerar exatamente 2 pivoteamentos (3 quadros)
+      // Solução ótima: X1 = 12, X2 = 6, Z = 7.800 RPS | Gargalos: vCPU e RAM | Folga Orçamento: R$ 300,00
+      function getDefaultSimplex() {
+        return {
+          c1: 350, // RPS por instância de Microsserviços Transacionais (X1)
+          c2: 600, // RPS por Nó de Processamento Analítico (X2)
+          constraints: [
+            { id: 'vcpu',   name: 'Limite de vCPU',        slack: 'X3', slackName: 'Folga vCPU',      a1: 2,   a2: 4,   rhs: 48,   unit: 'vCPUs' },
+            { id: 'ram',    name: 'Memória RAM (GB)',      slack: 'X4', slackName: 'Folga RAM',       a1: 4,   a2: 6,   rhs: 84,   unit: 'GB' },
+            { id: 'budget', name: 'Orçamento Mensal (R$)', slack: 'X5', slackName: 'Folga Orçamento', a1: 300, a2: 250, rhs: 5400, unit: 'R$' }
+          ]
+        };
+      }
+
+      // Estado em memória (100% compatível com iframes restritos do Google Sites)
+      let state = {
+        providers: getDefaultProviders(),
+        pairwiseIdx: getDefaultPairwiseIdx(),
+        simplex: getDefaultSimplex()
+      };
+
+      /* ========================================================================
+         2. UTILITÁRIOS DE FORMATAÇÃO E SEGURANÇA NUMÉRICA
+         ======================================================================== */
+      function cleanZero(num) {
+        if (typeof num !== 'number' || !Number.isFinite(num)) return 0;
+        return Math.abs(num) < 1e-10 ? 0 : num;
+      }
+
+      function fmt(num, maxDec = 2, minDec = 0) {
+        const val = cleanZero(num);
+        return val.toLocaleString('pt-BR', {
+          minimumFractionDigits: minDec,
+          maximumFractionDigits: maxDec
+        });
+      }
+
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      let toastTimer = null;
+      function showToast(msg) {
+        const el = document.getElementById('toast');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          el.classList.remove('show');
+        }, 2400);
+      }
+
+      /* ========================================================================
+         3. MOTOR MATEMÁTICO DA ETAPA 1 (NORMALIZAÇÃO MIN-MAX + AHP DE SAATY)
+         ======================================================================== */
+      function computeAHP() {
+        const n = CRITERIA.length; // 5
+        const RI = 1.12; // Índice Aleatório de Saaty para n = 5
+
+        // 3.1 Mínimo e Máximo por critério
+        const bounds = {};
+        CRITERIA.forEach(function (c) {
+          const vals = state.providers.map(function (p) {
+            const v = Number(p.values[c.id]);
+            return Number.isFinite(v) ? v : 0;
+          });
+          bounds[c.id] = {
+            min: Math.min.apply(null, vals),
+            max: Math.max.apply(null, vals)
+          };
+        });
+
+        // 3.2 Normalização Linear Min-Max [0, 1]
+        const normalized = state.providers.map(function (p) {
+          const norm = {};
+          CRITERIA.forEach(function (c) {
+            const x = Number(p.values[c.id]);
+            const safeX = Number.isFinite(x) ? x : 0;
+            const min = bounds[c.id].min;
+            const max = bounds[c.id].max;
+            const span = max - min;
+
+            if (Math.abs(span) < 1e-12) {
+              // Evita divisão por zero / NaN quando todos os provedores empatam
+              norm[c.id] = 1;
+            } else if (c.type === 'BENEFIT') {
+              norm[c.id] = (safeX - min) / span;
+            } else {
+              norm[c.id] = (max - safeX) / span;
+            }
+          });
+          return { id: p.id, name: p.name, norm: norm };
+        });
+
+        // 3.3 Construção da Matriz Par a Par de Saaty (5x5)
+        const matrix = [];
+        const matrixLabels = [];
+        for (let i = 0; i < n; i++) {
+          matrix[i] = [];
+          matrixLabels[i] = [];
+          for (let j = 0; j < n; j++) {
+            if (i === j) {
+              matrix[i][j] = 1;
+              matrixLabels[i][j] = '1';
+            } else if (i < j) {
+              const idx = state.pairwiseIdx[i + '-' + j];
+              const item = SAATY_SCALE[idx] || SAATY_SCALE[8];
+              matrix[i][j] = item.val;
+              matrixLabels[i][j] = item.label;
+            } else {
+              const idx = state.pairwiseIdx[j + '-' + i];
+              const mirrorIdx = (SAATY_SCALE.length - 1) - (typeof idx === 'number' ? idx : 8);
+              const mirrorItem = SAATY_SCALE[mirrorIdx] || SAATY_SCALE[8];
+              matrix[i][j] = mirrorItem.val;
+              matrixLabels[i][j] = mirrorItem.label;
+            }
+          }
+        }
+
+        // 3.4 Soma das colunas e Vetor de Pesos Relativos (W1..W5 somando 1)
+        const colSums = [];
+        for (let j = 0; j < n; j++) {
+          let sum = 0;
+          for (let i = 0; i < n; i++) sum += matrix[i][j];
+          colSums[j] = sum;
+        }
+
+        const weights = [];
+        let wTotal = 0;
+        for (let i = 0; i < n; i++) {
+          let rowAvg = 0;
+          for (let j = 0; j < n; j++) {
+            rowAvg += colSums[j] > 0 ? (matrix[i][j] / colSums[j]) : (1 / n);
+          }
+          weights[i] = rowAvg / n;
+          wTotal += weights[i];
+        }
+        for (let i = 0; i < n; i++) {
+          weights[i] = wTotal > 0 ? (weights[i] / wTotal) : (1 / n);
+        }
+
+        // 3.5 Lambda Máximo, IC = (lambdaMax - 5) / 4, RC = IC / 1.12
+        let lambdaMax = 0;
+        for (let i = 0; i < n; i++) {
+          let aw = 0;
+          for (let j = 0; j < n; j++) {
+            aw += matrix[i][j] * weights[j];
+          }
+          lambdaMax += weights[i] > 1e-12 ? (aw / weights[i]) : n;
+        }
+        lambdaMax = lambdaMax / n;
+
+        const ic = cleanZero((lambdaMax - n) / (n - 1));
+        const rc = cleanZero(ic / RI);
+        const isConsistent = rc < 0.10;
+
+        // 3.6 Ranking Final: Pontuação_i = soma(W_j * N_ij)
+        const ranking = normalized.map(function (row) {
+          let score = 0;
+          CRITERIA.forEach(function (c, j) {
+            score += weights[j] * row.norm[c.id];
+          });
+          return { id: row.id, name: row.name, score: cleanZero(score) };
+        }).sort(function (a, b) {
+          return b.score - a.score;
+        });
+
+        return {
+          normalized: normalized,
+          matrix: matrix,
+          matrixLabels: matrixLabels,
+          weights: weights,
+          lambdaMax: lambdaMax,
+          ic: ic,
+          rc: rc,
+          ri: RI,
+          isConsistent: isConsistent,
+          ranking: ranking
+        };
+      }
+
+      /* ========================================================================
+         4. MOTOR MATEMÁTICO DA ETAPA 2 (MÉTODO SIMPLEX TABULAR — GAUSS-JORDAN)
+         ======================================================================== */
+      function computeSimplex() {
+        try {
+          const TOL = 1e-9;
+          const c1 = Number.isFinite(Number(state.simplex.c1)) ? Number(state.simplex.c1) : 0;
+          const c2 = Number.isFinite(Number(state.simplex.c2)) ? Number(state.simplex.c2) : 0;
+          const cons = state.simplex.constraints;
+          const m = cons.length; // 3 restrições
+
+          // Colunas: [X1, X2, X3, X4, X5, RHS]
+          const varNames = ['X1', 'X2', 'X3', 'X4', 'X5'];
+          const cj = [c1, c2, 0, 0, 0];
+          const numVars = 5;
+          const rhsCol = 5;
+
+          // Base inicial: variáveis de folga X3 (2), X4 (3), X5 (4)
+          let basis = [2, 3, 4];
+          let rows = cons.map(function (c, i) {
+            const row = [
+              Number.isFinite(Number(c.a1)) ? Number(c.a1) : 0,
+              Number.isFinite(Number(c.a2)) ? Number(c.a2) : 0,
+              0, 0, 0,
+              Number.isFinite(Number(c.rhs)) ? Number(c.rhs) : 0
+            ];
+            row[2 + i] = 1; // Matriz identidade inicial
+            return row;
+          });
+
+          const iterations = [];
+          const MAX_ITER = 20;
+          let iter = 0;
+          let status = 'OPTIMAL';
+          let statusMsg = 'Solução Ótima Encontrada';
+
+          while (iter < MAX_ITER) {
+            // Calcula Zj (incluindo coluna RHS = valor atual de Z)
+            const zj = new Array(numVars + 1).fill(0);
+            for (let col = 0; col <= numVars; col++) {
+              let sum = 0;
+              for (let r = 0; r < m; r++) {
+                sum += cj[basis[r]] * rows[r][col];
+              }
+              zj[col] = cleanZero(sum);
+            }
+
+            // Calcula linha Cj - Zj para as 5 variáveis
+            const cjMinusZj = [];
+            let enteringCol = -1;
+            let bestVal = TOL; // Critério de parada: todos Cj - Zj <= 1e-9
+
+            for (let col = 0; col < numVars; col++) {
+              const diff = cleanZero(cj[col] - zj[col]);
+              cjMinusZj.push(diff);
+              if (diff > bestVal) {
+                bestVal = diff;
+                enteringCol = col;
+              }
+            }
+
+            // Se não existe Cj - Zj > 0, atingimos o quadro ótimo
+            if (enteringCol === -1) {
+              iterations.push({
+                index: iter,
+                title: iter === 0 ? 'Quadro Inicial (Já Ótimo)' : 'Iteração ' + iter + ' — Quadro Ótimo',
+                isOptimal: true,
+                isUnbounded: false,
+                basis: basis.slice(),
+                rows: rows.map(function (r) { return r.slice(); }),
+                zj: zj.slice(),
+                cjMinusZj: cjMinusZj.slice(),
+                ratios: new Array(m).fill(null),
+                enteringCol: null,
+                leavingRow: null,
+                pivotEl: null,
+                zVal: zj[rhsCol]
+              });
+              status = 'OPTIMAL';
+              statusMsg = 'Solução Ótima Encontrada (' + iter + ' pivoteamento' + (iter === 1 ? '' : 's') + ')';
+              break;
+            }
+
+            // Regra de saída: menor razão positiva RHS / coef_pivo (apenas para coef_pivo > 0)
+            const ratios = [];
+            let leavingRow = -1;
+            let minRatio = Infinity;
+
+            for (let r = 0; r < m; r++) {
+              const coef = rows[r][enteringCol];
+              const rhsVal = rows[r][rhsCol];
+              if (coef > TOL) {
+                const ratio = rhsVal / coef;
+                ratios.push(ratio);
+                if (ratio >= -TOL && ratio < minRatio - 1e-12) {
+                  minRatio = ratio;
+                  leavingRow = r;
+                }
+              } else {
+                ratios.push(null);
+              }
+            }
+
+            // Verifica problema ilimitado
+            if (leavingRow === -1) {
+              iterations.push({
+                index: iter,
+                title: iter === 0 ? 'Quadro Inicial — Ilimitado' : 'Iteração ' + iter + ' — Ilimitado',
+                isOptimal: false,
+                isUnbounded: true,
+                basis: basis.slice(),
+                rows: rows.map(function (r) { return r.slice(); }),
+                zj: zj.slice(),
+                cjMinusZj: cjMinusZj.slice(),
+                ratios: ratios.slice(),
+                enteringCol: enteringCol,
+                leavingRow: null,
+                pivotEl: null,
+                zVal: zj[rhsCol]
+              });
+              status = 'UNBOUNDED';
+              statusMsg = 'Solução Ilimitada (sem coeficiente positivo na coluna pivô)';
+              break;
+            }
+
+            const pivotEl = rows[leavingRow][enteringCol];
+
+            // Registra o quadro atual antes de aplicar Gauss-Jordan
+            iterations.push({
+              index: iter,
+              title: iter === 0 ? 'Quadro Inicial (Acampamento Base)' : 'Iteração ' + iter,
+              isOptimal: false,
+              isUnbounded: false,
+              basis: basis.slice(),
+              rows: rows.map(function (r) { return r.slice(); }),
+              zj: zj.slice(),
+              cjMinusZj: cjMinusZj.slice(),
+              ratios: ratios.slice(),
+              enteringCol: enteringCol,
+              leavingRow: leavingRow,
+              pivotEl: pivotEl,
+              zVal: zj[rhsCol]
+            });
+
+            // Eliminação de Gauss-Jordan exata:
+            // Nova Linha Pivô = Linha Pivô / Elemento Pivô
+            const newPivotRow = rows[leavingRow].map(function (v) {
+              return cleanZero(v / pivotEl);
+            });
+
+            // Outras Linhas = Linha Antiga - (Coef Coluna Pivô * Nova Linha Pivô)
+            const nextRows = rows.map(function (r, rIdx) {
+              if (rIdx === leavingRow) return newPivotRow;
+              const factor = r[enteringCol];
+              return r.map(function (v, cIdx) {
+                return cleanZero(v - factor * newPivotRow[cIdx]);
+              });
+            });
+
+            const nextBasis = basis.slice();
+            nextBasis[leavingRow] = enteringCol;
+
+            rows = nextRows;
+            basis = nextBasis;
+            iter++;
+          }
+
+          if (iter >= MAX_ITER && status !== 'OPTIMAL') {
+            status = 'MAX_ITER';
+            statusMsg = 'Limite de iterações atingido';
+          }
+
+          // Extração da solução ótima final
+          const last = iterations[iterations.length - 1];
+          let x1Opt = 0;
+          let x2Opt = 0;
+          if (last) {
+            last.basis.forEach(function (varIdx, rIdx) {
+              const val = Math.max(0, cleanZero(last.rows[rIdx][rhsCol]));
+              if (varIdx === 0) x1Opt = val;
+              if (varIdx === 1) x2Opt = val;
+            });
+          }
+          const zOpt = last ? Math.max(0, cleanZero(last.zVal)) : 0;
+
+          // Leitura gerencial dos recursos (Gargalo vs. Capacidade Ociosa)
+          const resources = cons.map(function (c) {
+            const a1 = Number(c.a1) || 0;
+            const a2 = Number(c.a2) || 0;
+            const limit = Number(c.rhs) || 0;
+            const used = cleanZero(a1 * x1Opt + a2 * x2Opt);
+            const slack = Math.max(0, cleanZero(limit - used));
+            const isBottleneck = slack <= 1e-6;
+            const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
+            return {
+              id: c.id,
+              name: c.name,
+              slackVar: c.slack,
+              unit: c.unit,
+              limit: limit,
+              used: used,
+              slack: slack,
+              isBottleneck: isBottleneck,
+              pct: pct
+            };
+          });
+
+          return {
+            status: status,
+            statusMsg: statusMsg,
+            varNames: varNames,
+            cj: cj,
+            iterations: iterations,
+            x1Opt: x1Opt,
+            x2Opt: x2Opt,
+            zOpt: zOpt,
+            resources: resources
+          };
+        } catch (err) {
+          return {
+            status: 'ERROR',
+            statusMsg: 'Erro no cálculo do Simplex: ' + (err && err.message ? err.message : 'verifique os dados'),
+            varNames: ['X1', 'X2', 'X3', 'X4', 'X5'],
+            cj: [0, 0, 0, 0, 0],
+            iterations: [],
+            x1Opt: 0,
+            x2Opt: 0,
+            zOpt: 0,
+            resources: []
+          };
+        }
+      }
+
+      /* ========================================================================
+         5. RENDERIZAÇÃO DOS INPUTS (CONSTRUÍDOS UMA VEZ PARA NÃO PERDER FOCO)
+         ======================================================================== */
+      function buildAhpInputs() {
+        // 5.1 Tabela de Dados Brutos (6 provedores x 5 critérios)
+        const tbody = document.getElementById('rawTableBody');
+        tbody.innerHTML = '';
+
+        state.providers.forEach(function (prov, pIdx) {
+          const tr = document.createElement('tr');
+
+          // Nome editável do provedor
+          const tdName = document.createElement('td');
+          const nameInput = document.createElement('input');
+          nameInput.type = 'text';
+          nameInput.className = 'input-provider';
+          nameInput.value = prov.name;
+          nameInput.setAttribute('aria-label', 'Nome do provedor ' + (pIdx + 1));
+          nameInput.addEventListener('input', function (e) {
+            state.providers[pIdx].name = e.target.value || ('Provedor ' + (pIdx + 1));
+            renderAhpOutputs();
+          });
+          tdName.appendChild(nameInput);
+          tr.appendChild(tdName);
+
+          // 5 inputs numéricos dos critérios
+          CRITERIA.forEach(function (crit) {
+            const td = document.createElement('td');
+            const inp = document.createElement('input');
+            inp.type = 'number';
+            inp.step = String(crit.step);
+            inp.value = prov.values[crit.id];
+            inp.setAttribute('aria-label', prov.name + ' - ' + crit.name);
+            inp.addEventListener('input', function (e) {
+              const parsed = parseFloat(e.target.value);
+              state.providers[pIdx].values[crit.id] = Number.isFinite(parsed) ? parsed : 0;
+              renderAhpOutputs();
+            });
+            td.appendChild(inp);
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        // 5.2 Construção dos 10 Sliders de Saaty (Triângulo Superior i < j)
+        const slidersWrap = document.getElementById('saatySlidersContainer');
+        slidersWrap.innerHTML = '';
+
+        for (let i = 0; i < CRITERIA.length; i++) {
+          for (let j = i + 1; j < CRITERIA.length; j++) {
+            (function (rowIdx, colIdx) {
+              const key = rowIdx + '-' + colIdx;
+              const currentScaleIdx = state.pairwiseIdx[key];
+              const scaleObj = SAATY_SCALE[currentScaleIdx] || SAATY_SCALE[8];
+
+              const box = document.createElement('div');
+              box.className = 'slider-box';
+
+              const head = document.createElement('div');
+              head.className = 'slider-header';
+
+              const lblL = document.createElement('span');
+              lblL.className = 'slider-label-left';
+              lblL.textContent = 'C' + (rowIdx + 1) + ' ' + CRITERIA[rowIdx].short;
+              lblL.title = CRITERIA[rowIdx].name;
+
+              const pill = document.createElement('span');
+              pill.className = 'slider-val-pill';
+              pill.id = 'pill-' + key;
+              pill.textContent = scaleObj.label;
+
+              const lblR = document.createElement('span');
+              lblR.className = 'slider-label-right';
+              lblR.textContent = 'C' + (colIdx + 1) + ' ' + CRITERIA[colIdx].short;
+              lblR.title = CRITERIA[colIdx].name;
+
+              head.appendChild(lblL);
+              head.appendChild(pill);
+              head.appendChild(lblR);
+
+              const range = document.createElement('input');
+              range.type = 'range';
+              range.min = '0';
+              range.max = String(SAATY_SCALE.length - 1);
+              range.step = '1';
+              range.value = String(currentScaleIdx);
+              range.setAttribute('aria-label', 'Comparação Saaty entre ' + CRITERIA[rowIdx].short + ' e ' + CRITERIA[colIdx].short);
+
+              const desc = document.createElement('div');
+              desc.className = 'slider-desc';
+              desc.id = 'desc-' + key;
+              desc.innerHTML = getSaatyDirectionText(rowIdx, colIdx, scaleObj);
+
+              range.addEventListener('input', function (e) {
+                const newIdx = parseInt(e.target.value, 10);
+                state.pairwiseIdx[key] = newIdx;
+                const chosen = SAATY_SCALE[newIdx] || SAATY_SCALE[8];
+                pill.textContent = chosen.label;
+                desc.innerHTML = getSaatyDirectionText(rowIdx, colIdx, chosen);
+                renderAhpOutputs();
+              });
+
+              box.appendChild(head);
+              box.appendChild(range);
+              box.appendChild(desc);
+              slidersWrap.appendChild(box);
+            })(i, j);
+          }
+        }
+      }
+
+      function getSaatyDirectionText(i, j, scaleObj) {
+        if (scaleObj.val === 1) {
+          return '<span>Mesma importância (1)</span><span>Equilíbrio</span>';
+        }
+        if (scaleObj.val > 1) {
+          return '<span>C' + (i + 1) + ' domina (' + scaleObj.label + '×)</span><span>' + scaleObj.text + '</span>';
+        }
+        return '<span>C' + (j + 1) + ' domina (' + scaleObj.label + ')</span><span>' + scaleObj.text + '</span>';
+      }
+
+      function buildSimplexInputs() {
+        const inpC1 = document.getElementById('inputC1');
+        const inpC2 = document.getElementById('inputC2');
+        inpC1.value = state.simplex.c1;
+        inpC2.value = state.simplex.c2;
+
+        // Remove listeners antigos clonando se necessário (usamos oninput direto para simplicidade limpa)
+        inpC1.oninput = function (e) {
+          const v = parseFloat(e.target.value);
+          state.simplex.c1 = Number.isFinite(v) ? v : 0;
+          renderSimplexOutputs();
+        };
+        inpC2.oninput = function (e) {
+          const v = parseFloat(e.target.value);
+          state.simplex.c2 = Number.isFinite(v) ? v : 0;
+          renderSimplexOutputs();
+        };
+
+        const container = document.getElementById('constraintsContainer');
+        container.innerHTML = '';
+
+        state.simplex.constraints.forEach(function (c, idx) {
+          const row = document.createElement('div');
+          row.className = 'constraint-row';
+
+          // Nome da restrição
+          const nameCol = document.createElement('div');
+          nameCol.className = 'constraint-name-col';
+          nameCol.innerHTML =
+            '<div style="font-weight:700; color:var(--navy); font-size:13px;">' + escHtml(c.name) + '</div>' +
+            '<div style="font-size:11px; color:var(--text-muted);">Folga: <strong>' + escHtml(c.slack) + '</strong> (' + escHtml(c.unit) + ')</div>';
+
+          // Coef X1
+          const colA1 = document.createElement('div');
+          colA1.innerHTML = '<label class="mini-label">Coef. X1</label>';
+          const inA1 = document.createElement('input');
+          inA1.type = 'number';
+          inA1.step = '0.5';
+          inA1.min = '0';
+          inA1.value = c.a1;
+          inA1.addEventListener('input', function (e) {
+            const v = parseFloat(e.target.value);
+            state.simplex.constraints[idx].a1 = Number.isFinite(v) ? v : 0;
+            renderSimplexOutputs();
+          });
+          colA1.appendChild(inA1);
+
+          // Coef X2
+          const colA2 = document.createElement('div');
+          colA2.innerHTML = '<label class="mini-label">Coef. X2</label>';
+          const inA2 = document.createElement('input');
+          inA2.type = 'number';
+          inA2.step = '0.5';
+          inA2.min = '0';
+          inA2.value = c.a2;
+          inA2.addEventListener('input', function (e) {
+            const v = parseFloat(e.target.value);
+            state.simplex.constraints[idx].a2 = Number.isFinite(v) ? v : 0;
+            renderSimplexOutputs();
+          });
+          colA2.appendChild(inA2);
+
+          // Operador <=
+          const colOp = document.createElement('div');
+          colOp.className = 'constraint-op';
+          colOp.textContent = '≤';
+
+          // Limite RHS
+          const colRhs = document.createElement('div');
+          colRhs.innerHTML = '<label class="mini-label">Limite (RHS)</label>';
+          const inRhs = document.createElement('input');
+          inRhs.type = 'number';
+          inRhs.step = '1';
+          inRhs.min = '0';
+          inRhs.value = c.rhs;
+          inRhs.style.fontWeight = '700';
+          inRhs.addEventListener('input', function (e) {
+            const v = parseFloat(e.target.value);
+            state.simplex.constraints[idx].rhs = Number.isFinite(v) ? v : 0;
+            renderSimplexOutputs();
+          });
+          colRhs.appendChild(inRhs);
+
+          row.appendChild(nameCol);
+          row.appendChild(colA1);
+          row.appendChild(colA2);
+          row.appendChild(colOp);
+          row.appendChild(colRhs);
+          container.appendChild(row);
+        });
+      }
+
+      /* ========================================================================
+         6. RENDERIZAÇÃO REATIVA DAS SAÍDAS — ETAPA 1 (AHP)
+         ======================================================================== */
+      function renderAhpOutputs() {
+        const res = computeAHP();
+
+        // 6.1 Badge de Consistência
+        const badge = document.getElementById('ahpConsistencyBadge');
+        if (res.isConsistent) {
+          badge.className = 'badge badge-ok';
+          badge.textContent = '✓ Consistente (RC = ' + fmt(res.rc, 4, 4) + ' < 0,10)';
+        } else {
+          badge.className = 'badge badge-err';
+          badge.textContent = '⚠ Inconsistente (RC = ' + fmt(res.rc, 4, 4) + ' ≥ 0,10)';
+        }
+
+        // 6.2 Matriz de Saaty 5x5 + Vetor de Pesos W
+        const matBody = document.getElementById('saatyMatrixBody');
+        let matHtml = '';
+        for (let i = 0; i < CRITERIA.length; i++) {
+          matHtml += '<tr>';
+          matHtml += '<td style="font-weight:700; color:var(--navy); white-space:nowrap;">C' + (i + 1) + ': ' + escHtml(CRITERIA[i].short) + '</td>';
+          for (let j = 0; j < CRITERIA.length; j++) {
+            const cls = i === j ? 'center matrix-diag' : 'center';
+            matHtml += '<td class="' + cls + '" title="Valor decimal: ' + fmt(res.matrix[i][j], 4) + '">' + escHtml(res.matrixLabels[i][j]) + '</td>';
+          }
+          matHtml += '<td class="num weight-col">' + fmt(res.weights[i], 4, 4) + '</td>';
+          matHtml += '<td class="num weight-col">' + fmt(res.weights[i] * 100, 1, 1) + '%</td>';
+          matHtml += '</tr>';
+        }
+        matBody.innerHTML = matHtml;
+
+        // 6.3 Métricas λmax, IC, RI, RC
+        const metricsEl = document.getElementById('ahpMetricsRow');
+        metricsEl.innerHTML =
+          '<div class="metric-tile">' +
+            '<div class="metric-label">λ máx (Autovalor)</div>' +
+            '<div class="metric-value">' + fmt(res.lambdaMax, 4, 4) + '</div>' +
+          '</div>' +
+          '<div class="metric-tile">' +
+            '<div class="metric-label">IC = (λmáx − 5) / 4</div>' +
+            '<div class="metric-value">' + fmt(res.ic, 4, 4) + '</div>' +
+          '</div>' +
+          '<div class="metric-tile">' +
+            '<div class="metric-label">RI (n = 5)</div>' +
+            '<div class="metric-value">' + fmt(res.ri, 2, 2) + '</div>' +
+          '</div>' +
+          '<div class="metric-tile ' + (res.isConsistent ? 'tile-ok' : 'tile-err') + '">' +
+            '<div class="metric-label">Razão RC = IC / 1,12</div>' +
+            '<div class="metric-value" style="color:' + (res.isConsistent ? 'var(--success)' : 'var(--danger)') + ';">' + fmt(res.rc, 4, 4) + '</div>' +
+          '</div>';
+
+        // 6.4 Gráfico de Barras Horizontal (CSS puro) + Tabela de Ranking
+        const maxScore = Math.max.apply(null, res.ranking.map(function (r) { return r.score; }).concat([0.0001]));
+        let chartHtml = '';
+        let rankTableHtml = '';
+
+        res.ranking.forEach(function (item, idx) {
+          const pos = idx + 1;
+          const isFirst = pos === 1;
+          const barWidth = Math.max(3, Math.min(100, (item.score / maxScore) * 100));
+
+          chartHtml +=
+            '<div class="bar-row">' +
+              '<div class="bar-meta">' +
+                '<span class="bar-name">' +
+                  '<span class="rank-dot ' + (isFirst ? 'first' : '') + '">' + (isFirst ? '★' : pos + 'º') + '</span>' +
+                  escHtml(item.name) +
+                '</span>' +
+                '<span style="font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums;">' + fmt(item.score, 4, 4) + '</span>' +
+              '</div>' +
+              '<div class="bar-track">' +
+                '<div class="bar-fill ' + (isFirst ? 'first' : '') + '" style="width:' + barWidth.toFixed(1) + '%;"></div>' +
+              '</div>' +
+            '</div>';
+
+          rankTableHtml +=
+            '<tr class="' + (isFirst ? 'row-winner' : '') + '">' +
+              '<td class="center">' + (isFirst ? '🥇 1º' : pos + 'º') + '</td>' +
+              '<td>' + escHtml(item.name) + '</td>' +
+              '<td class="num">' + fmt(item.score, 4, 4) + '</td>' +
+              '<td class="num" style="color:var(--primary); font-weight:700;">' + fmt(item.score * 100, 1, 1) + '%</td>' +
+            '</tr>';
+        });
+
+        document.getElementById('rankingChart').innerHTML = chartHtml;
+        document.getElementById('rankingTableBody').innerHTML = rankTableHtml;
+
+        // 6.5 Banner do Vencedor
+        const winner = res.ranking[0];
+        const runnerUp = res.ranking[1];
+        const diffPts = winner && runnerUp ? (winner.score - runnerUp.score) : 0;
+        document.getElementById('winnerBanner').innerHTML =
+          '<div style="font-size:20px; line-height:1;">🏆</div>' +
+          '<div>' +
+            '<strong>Recomendação AHP: ' + escHtml(winner ? winner.name : '-') + '</strong> lidera o ranking com pontuação global de ' +
+            '<strong>' + fmt(winner ? winner.score : 0, 4, 4) + '</strong> (' + fmt((winner ? winner.score : 0) * 100, 1, 1) + '%), ' +
+            'vantagem de ' + fmt(diffPts, 4, 4) + ' ponto sobre ' + escHtml(runnerUp ? runnerUp.name : '-') + '.' +
+          '</div>';
+
+        // 6.6 Tabela Normalizada Min-Max [0, 1]
+        let normHtml = '';
+        res.normalized.forEach(function (row) {
+          normHtml += '<tr>';
+          normHtml += '<td style="font-weight:700; color:var(--navy);">' + escHtml(row.name) + '</td>';
+          CRITERIA.forEach(function (c) {
+            normHtml += '<td class="num">' + fmt(row.norm[c.id], 4, 4) + '</td>';
+          });
+          normHtml += '</tr>';
+        });
+        document.getElementById('normalizedTableBody').innerHTML = normHtml;
+      }
+
+      /* ========================================================================
+         7. RENDERIZAÇÃO REATIVA DAS SAÍDAS — ETAPA 2 (SIMPLEX TABULAR)
+         ======================================================================== */
+      function renderSimplexOutputs() {
+        const res = computeSimplex();
+        const s = state.simplex;
+
+        // 7.1 Exibição da Forma Padrão
+        const c0 = s.constraints[0];
+        const c1 = s.constraints[1];
+        const c2 = s.constraints[2];
+        document.getElementById('standardFormBox').innerHTML =
+          '<strong>Max Z</strong> = ' + fmt(s.c1, 2) + '·X1 + ' + fmt(s.c2, 2) + '·X2 + 0·X3 + 0·X4 + 0·X5<br/>' +
+          '<span style="color:var(--text-muted);">Sujeito a:</span><br/>' +
+          '(1) ' + fmt(c0.a1, 2) + '·X1 + ' + fmt(c0.a2, 2) + '·X2 + 1·<strong>X3</strong> = ' + fmt(c0.rhs, 2) + ' <span style="color:var(--text-muted);">(' + escHtml(c0.slackName) + ')</span><br/>' +
+          '(2) ' + fmt(c1.a1, 2) + '·X1 + ' + fmt(c1.a2, 2) + '·X2 + 1·<strong>X4</strong> = ' + fmt(c1.rhs, 2) + ' <span style="color:var(--text-muted);">(' + escHtml(c1.slackName) + ')</span><br/>' +
+          '(3) ' + fmt(c2.a1, 2) + '·X1 + ' + fmt(c2.a2, 2) + '·X2 + 1·<strong>X5</strong> = ' + fmt(c2.rhs, 2) + ' <span style="color:var(--text-muted);">(' + escHtml(c2.slackName) + ')</span><br/>' +
+          'X1, X2, X3, X4, X5 &ge; 0';
+
+        // 7.2 Status Badge
+        const stBadge = document.getElementById('simplexStatusBadge');
+        stBadge.textContent = res.statusMsg;
+        stBadge.className = 'badge ' + (res.status === 'OPTIMAL' ? 'badge-ok' : 'badge-err');
+
+        // 7.3 Cards KPI (X1*, X2*, Z*)
+        document.getElementById('simplexKpiGrid').innerHTML =
+          '<div class="kpi-card">' +
+            '<div class="kpi-label">X1 Ótimo — Microsserviços Transacionais</div>' +
+            '<div class="kpi-value">' + fmt(res.x1Opt, 2) + ' <span class="kpi-unit">instâncias</span></div>' +
+          '</div>' +
+          '<div class="kpi-card kpi-blue">' +
+            '<div class="kpi-label">X2 Ótimo — Nós de Processamento Analítico</div>' +
+            '<div class="kpi-value">' + fmt(res.x2Opt, 2) + ' <span class="kpi-unit">nós</span></div>' +
+          '</div>' +
+          '<div class="kpi-card kpi-z">' +
+            '<div class="kpi-label">Z Máximo — Throughput / Retorno Ótimo</div>' +
+            '<div class="kpi-value">' + fmt(res.zOpt, 2) + ' <span class="kpi-unit">RPS</span></div>' +
+          '</div>';
+
+        // 7.4 Cards de Gargalos vs. Capacidade Ociosa
+        let resHtml = '';
+        res.resources.forEach(function (r) {
+          const cls = r.isBottleneck ? 'bottleneck' : 'idle';
+          const badgeHtml = r.isBottleneck
+            ? '<span class="badge badge-err">GARGALO (Folga = 0)</span>'
+            : '<span class="badge badge-info">CAPACIDADE OCIOSA</span>';
+          const barColor = r.isBottleneck ? '#dc2626' : '#1d4ed8';
+
+          resHtml +=
+            '<div class="resource-card ' + cls + '">' +
+              '<div class="res-top">' +
+                '<span class="res-name">' + escHtml(r.name) + '</span>' +
+                badgeHtml +
+              '</div>' +
+              '<div class="res-bar-track">' +
+                '<div class="res-bar-fill" style="width:' + r.pct.toFixed(1) + '%; background:' + barColor + ';"></div>' +
+              '</div>' +
+              '<div class="res-meta">' +
+                '<div>Consumido: <strong>' + fmt(r.used, 2) + '</strong> / ' + fmt(r.limit, 2) + ' ' + escHtml(r.unit) + ' (' + fmt(r.pct, 1) + '%)</div>' +
+                '<div>' +
+                  'Variável <strong>' + escHtml(r.slackVar) + '</strong>: ' +
+                  (r.isBottleneck
+                    ? '<strong style="color:var(--danger);">0 ' + escHtml(r.unit) + ' (recurso 100% esgotado)</strong>'
+                    : '<strong style="color:var(--primary);">Sobram ' + fmt(r.slack, 2) + ' ' + escHtml(r.unit) + '</strong>') +
+                '</div>' +
+              '</div>' +
+            '</div>';
+        });
+        document.getElementById('simplexResourceGrid').innerHTML = resHtml;
+
+        // 7.5 Renderização de TODOS os Quadros (Tableaus) Passo a Passo
+        const tableausWrap = document.getElementById('simplexTableausContainer');
+        let html = '';
+
+        res.iterations.forEach(function (it) {
+          const enteringName = it.enteringCol !== null ? res.varNames[it.enteringCol] : null;
+          const leavingName = it.leavingRow !== null ? res.varNames[it.basis[it.leavingRow]] : null;
+
+          let summaryHtml = '';
+          if (it.isOptimal) {
+            summaryHtml = '<span class="badge badge-ok">✓ Critério de parada atingido (todos Cj − Zj ≤ 0) • Z = ' + fmt(it.zVal, 2) + '</span>';
+          } else if (it.isUnbounded) {
+            summaryHtml = '<span class="badge badge-err">⚠ Problema ilimitado na coluna ' + escHtml(enteringName || '') + '</span>';
+          } else {
+            summaryHtml =
+              '<span class="badge badge-info">Entra: ' + escHtml(enteringName) + '</span>' +
+              '<span class="badge badge-warn">Sai: ' + escHtml(leavingName) + '</span>' +
+              '<span class="badge badge-ok">Elemento Pivô: ' + fmt(it.pivotEl, 4) + '</span>';
+          }
+
+          html +=
+            '<div class="tableau-card">' +
+              '<div class="tableau-head">' +
+                '<div class="tableau-title-wrap">' +
+                  '<span class="iter-num">' + it.index + '</span>' +
+                  '<strong style="color:var(--navy); font-size:14px;">' + escHtml(it.title) + '</strong>' +
+                '</div>' +
+                '<div class="tableau-summary">' + summaryHtml + '</div>' +
+              '</div>' +
+              '<div class="table-wrap">' +
+                '<table>' +
+                  '<thead>' +
+                    '<tr>' +
+                      '<th>Base</th>' +
+                      '<th class="center">C<sub>b</sub></th>';
+
+          res.varNames.forEach(function (vName, cIdx) {
+            const isPivotCol = it.enteringCol === cIdx;
+            html +=
+              '<th class="center ' + (isPivotCol ? 'pivot-col-hdr' : '') + '">' +
+                vName + '<br/><span style="font-size:10px; font-weight:500; opacity:0.8;">C<sub>j</sub>=' + fmt(res.cj[cIdx], 0) + '</span>' +
+              '</th>';
+          });
+
+          html +=
+                      '<th class="num" style="background:#e2e8f0;">RHS</th>' +
+                      '<th class="num">Razão Mínima</th>' +
+                    '</tr>' +
+                  '</thead>' +
+                  '<tbody>';
+
+          // Linhas da Base
+          it.rows.forEach(function (row, rIdx) {
+            const bVarIdx = it.basis[rIdx];
+            const bVarName = res.varNames[bVarIdx];
+            const cbVal = res.cj[bVarIdx];
+            const isPivotRow = it.leavingRow === rIdx;
+            const ratio = it.ratios[rIdx];
+
+            html += '<tr class="' + (isPivotRow ? 'pivot-row-tr' : '') + '">';
+            html += '<td style="font-weight:800; color:var(--navy);">' + escHtml(bVarName) + '</td>';
+            html += '<td class="center">' + fmt(cbVal, 2) + '</td>';
+
+            for (let cIdx = 0; cIdx < 5; cIdx++) {
+              const isPivotCol = it.enteringCol === cIdx;
+              const isPivotCell = isPivotRow && isPivotCol;
+              let tdCls = 'center';
+              if (isPivotCell) tdCls += ' pivot-element-cell';
+              else if (isPivotCol) tdCls += ' pivot-col-cell';
+
+              html += '<td class="' + tdCls + '">' + fmt(row[cIdx], 4) + '</td>';
+            }
+
+            html += '<td class="num" style="font-weight:700; color:var(--navy);">' + fmt(row[5], 4) + '</td>';
+
+            if (it.isOptimal) {
+              html += '<td class="num" style="color:var(--text-light);">—</td>';
+            } else if (ratio === null) {
+              html += '<td class="num" style="color:var(--text-light);">N/A</td>';
+            } else {
+              html += '<td class="num ' + (isPivotRow ? 'ratio-min-cell' : '') + '">' + fmt(ratio, 4) + (isPivotRow ? ' ★' : '') + '</td>';
+            }
+
+            html += '</tr>';
+          });
+
+          // Linha Zj
+          html += '<tr class="row-zj">';
+          html += '<td>Z<sub>j</sub></td>';
+          html += '<td class="center">—</td>';
+          for (let cIdx = 0; cIdx < 5; cIdx++) {
+            html += '<td class="center">' + fmt(it.zj[cIdx], 4) + '</td>';
+          }
+          html += '<td class="num">Z = ' + fmt(it.zVal, 2) + '</td>';
+          html += '<td class="num">—</td>';
+          html += '</tr>';
+
+          // Linha Cj - Zj
+          html += '<tr class="row-cjzj">';
+          html += '<td>C<sub>j</sub> &minus; Z<sub>j</sub></td>';
+          html += '<td class="center">—</td>';
+          for (let cIdx = 0; cIdx < 5; cIdx++) {
+            const val = it.cjMinusZj[cIdx];
+            const isEnt = it.enteringCol === cIdx;
+            let cls = 'center';
+            if (isEnt) cls += ' entering-cjzj';
+            else if (val > 1e-9) cls += ' cjzj-pos';
+            html += '<td class="' + cls + '">' + fmt(val, 4) + '</td>';
+          }
+          html += '<td class="num" style="color:var(--text-light);">—</td>';
+          html += '<td class="num" style="color:var(--text-light);">—</td>';
+          html += '</tr>';
+
+          html += '</tbody></table></div>';
+
+          // Rodapé explicativo da iteração (Gauss-Jordan)
+          if (!it.isOptimal && !it.isUnbounded) {
+            html +=
+              '<div class="tableau-note">' +
+                '<strong>Passo de Gauss-Jordan aplicado a seguir:</strong> ' +
+                '<strong>' + escHtml(enteringName) + '</strong> entra na base (maior C<sub>j</sub>&minus;Z<sub>j</sub> = ' + fmt(it.cjMinusZj[it.enteringCol], 4) + ') e ' +
+                '<strong>' + escHtml(leavingName) + '</strong> sai (menor razão = ' + fmt(it.ratios[it.leavingRow], 4) + '). ' +
+                'Divide-se a linha pivô por <strong>' + fmt(it.pivotEl, 4) + '</strong> e zeram-se os demais elementos da coluna ' + escHtml(enteringName) + '.' +
+              '</div>';
+          } else if (it.isOptimal) {
+            html +=
+              '<div class="tableau-note" style="color:var(--success); font-weight:600;">' +
+                '✓ Solução ótima comprovada: nenhum coeficiente na linha C<sub>j</sub> &minus; Z<sub>j</sub> é estritamente positivo. ' +
+                'Alocação ótima: X1 = ' + fmt(res.x1Opt, 2) + ', X2 = ' + fmt(res.x2Opt, 2) + ' e Z máximo = ' + fmt(res.zOpt, 2) + ' RPS.' +
+              '</div>';
+          }
+
+          html += '</div>';
+        });
+
+        tableausWrap.innerHTML = html;
+      }
+
+      /* ========================================================================
+         8. CONTROLE DE ABAS E RESTAURAÇÃO DE DADOS DE TESTE
+         ======================================================================== */
+      function switchTab(tab) {
+        const btnAhp = document.getElementById('tabBtnAhp');
+        const btnSimp = document.getElementById('tabBtnSimplex');
+        const panelAhp = document.getElementById('panelAhp');
+        const panelSimp = document.getElementById('panelSimplex');
+
+        if (tab === 'ahp') {
+          btnAhp.classList.add('active');
+          btnAhp.setAttribute('aria-selected', 'true');
+          btnSimp.classList.remove('active');
+          btnSimp.setAttribute('aria-selected', 'false');
+          panelAhp.classList.add('active');
+          panelSimp.classList.remove('active');
+        } else {
+          btnSimp.classList.add('active');
+          btnSimp.setAttribute('aria-selected', 'true');
+          btnAhp.classList.remove('active');
+          btnAhp.setAttribute('aria-selected', 'false');
+          panelSimp.classList.add('active');
+          panelAhp.classList.remove('active');
+        }
+      }
+
+      function resetAllData() {
+        state = {
+          providers: getDefaultProviders(),
+          pairwiseIdx: getDefaultPairwiseIdx(),
+          simplex: getDefaultSimplex()
+        };
+        buildAhpInputs();
+        buildSimplexInputs();
+        renderAhpOutputs();
+        renderSimplexOutputs();
+        showToast('Dados de teste do Cenário B restaurados!');
+      }
+
+      function init() {
+        document.getElementById('tabBtnAhp').addEventListener('click', function () {
+          switchTab('ahp');
+        });
+        document.getElementById('tabBtnSimplex').addEventListener('click', function () {
+          switchTab('simplex');
+        });
+        document.getElementById('btnResetAll').addEventListener('click', resetAllData);
+
+        buildAhpInputs();
+        buildSimplexInputs();
+        renderAhpOutputs();
+        renderSimplexOutputs();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
